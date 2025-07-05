@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Forecast</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to right top, #6dd5ed, #2193b0);
+      min-height: 100vh;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center p-6">
+  <div class="w-full max-w-2xl glass text-black p-6">
+    <h1 class="text-3xl font-bold text-center mb-6">Weather Forecast</h1>
+
+    <!-- Search -->
+    <div class="flex gap-2 mb-6">
+      <input type="text" id="cityInput" placeholder="Enter city name..." class="flex-1 px-4 py-2 rounded bg-black/20 text-black placeholder-white border-white border" />
+      <button id="searchBtn" class="bg-white/30 hover:bg-white/40 px-4 py-2 rounded font-semibold">Search</button>
+    </div>
+
+    <!-- GitHub Link -->
+   <div class="flex justify-between items-center mb-4">
+  <h1 class="text-3xl font-bold text-center w-full"></h1>
+  <a href="https://github.com/HarshitJasiwal/weather_forecast" target="_blank"
+     class="absolute top-6 right-6 bg-black/20 hover:bg-black/30 text-white text-sm px-4 py-2 rounded-full shadow">
+    View on GitHub
+  </a>
+</div>
+
+    <!-- Current Weather Card -->
+    <div id="currentWeather" class="hidden p-4 rounded-lg bg-white/20 mb-6">
+      <div class="flex items-center gap-4">
+        <img id="icon" class="w-20 h-20" />
+        <div>
+          <h2 id="location" class="text-xl font-bold mb-1"></h2>
+          <p id="condition" class="capitalize text-sm"></p>
+          <p id="temperature" class="text-lg"></p>
+          <p id="wind" class="text-sm"></p>
+          <p id="humidity" class="text-sm"></p>
+          <p id="aqi" class="text-sm"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forecast Scroll Cards -->
+    <div class="overflow-x-auto">
+      <div id="forecastContainer" class="flex gap-4 w-max pb-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = 'e57d33f4ae154de292f191652250507';
+
+    const searchBtn = document.getElementById('searchBtn');
+    const cityInput = document.getElementById('cityInput');
+    const currentWeather = document.getElementById('currentWeather');
+    const forecastContainer = document.getElementById('forecastContainer');
+
+    const locationEl = document.getElementById('location');
+    const iconEl = document.getElementById('icon');
+    const conditionEl = document.getElementById('condition');
+    const temperatureEl = document.getElementById('temperature');
+    const windEl = document.getElementById('wind');
+    const humidityEl = document.getElementById('humidity');
+    const aqiEl = document.getElementById('aqi');
+
+    searchBtn.addEventListener('click', async () => {
+      const city = cityInput.value.trim();
+      if (!city) {
+        alert('Please enter a city name.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${city}&days=5&aqi=yes`);
+        if (!res.ok) throw new Error('City not found or invalid request');
+
+        const data = await res.json();
+        const { location, current, forecast } = data;
+
+        // Current Weather
+        locationEl.textContent = `${location.name}, ${location.country}`;
+        iconEl.src = `https:${current.condition.icon}`;
+        conditionEl.textContent = current.condition.text;
+        temperatureEl.textContent = `Temperature: ${current.temp_c}°C`;
+        windEl.textContent = `Wind: ${current.wind_kph} km/h`;
+        humidityEl.textContent = `Humidity: ${current.humidity}%`;
+        aqiEl.textContent = `AQI (PM2.5): ${current.air_quality.pm2_5.toFixed(1)}`;
+        currentWeather.classList.remove('hidden');
+
+        // Forecast
+        forecastContainer.innerHTML = '';
+        forecast.forecastday.forEach(day => {
+          const card = document.createElement('div');
+          card.className = 'min-w-[140px] bg-white/30 p-4 rounded-lg text-black text-sm flex flex-col items-center';
+
+          card.innerHTML = `
+            <p class="font-semibold mb-1">${day.date}</p>
+            <img src="https:${day.day.condition.icon}" alt="icon" class="w-12 h-12 mb-1" />
+            <p class="capitalize mb-1">${day.day.condition.text}</p>
+            <p>${day.day.avgtemp_c}°C</p>
+            <p>${day.day.maxwind_kph} km/h</p>
+            <p>${day.day.avghumidity}% Humidity</p>
+          `;
+          forecastContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  </script>
+</body>
+</html>
+
+ <!-- The End :) -->
